@@ -1,0 +1,144 @@
+---
+title: "Monte Carlo Tutorial"
+author: "Francesco Giorgetti"
+date: "1/14/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Monte Carlo Simulation in R
+
+This tutorial will take the reader through the definition, setting and running of Monte Carlo simulation using R.
+Monte Carlo itself is of course a very know method, nothing super fancy compared with nowadays ML algorithms. Maybe because of that, I struggled to find a comprehensive guide on how to correctly define Monte Carlo simulations: there are several sources in the Internet, but no one lloked to me cmplete enough. That is why I will try to cover how much as I can in this tutorial, hopeing it may relieve to others some of the pains I went through ;)
+
+I will rely on a package I wrote with some function. It can be installed running 
+`devtools::intall_github("ravenroadresources/rmontecarlo")`
+
+&nbsp;
+
+### Intro
+
+In general, Monte Carlo method is used in 2 different situations: 
+
+1. address uncertainty
+2. approximate solution
+
+In this tutorial we will develop in parallel examples of both cases, so that will be easier to appreciate the differences and particularities of each case. Uncertainty and probabilistic output are used in many disciplines, from exploration of oil and gas to operations of search and rescue performed by the coast guard.
+The estimation of the number pi or the integral of function are examples of Monte Carlo used to approximate the exact solution.
+
+But what is Monte Carlo? In it simplest definition it is the repetition of an experiment n times. 
+The fact of repeating an experiment, each time with different input randomly sampled from a specific distribution, allows to reproduce sometimes very complex interaction between input variables. 
+
+A Monte Carlo simulation can be divided into 3 steps:
+
+1. definition of distributions and sampling
+2. simulation of the experiment itself
+3. analysis of the results
+
+It happens that R is particularly well fit to run MC: the first step, arguably the most important, is pure application of statistical methods, as the third step can be understood in many cases as data analysis: both statistics and data analysis are the core of R.
+Even if R may not be the most performant language, the simulation can be written in an efficient way taking advantage of the vectorized operation feature of R. Also, MC simulation is a natural application of parallel computation.
+In some real-life cases, I used R for the definition of input variables distribution and sampling, exporting the input dataset to third party software to run complex simulations, and then bring the results back to be analyzed in R.
+
+&nbsp;
+
+### Distributions
+
+Random distributions caner easily generated in r using `rnorm()` function.
+The way I prefer for visualizing a distribution is as follows:
+
+```{r, warning = FALSE, message = FALSE}
+library(ggplot2)
+library(dplyr)
+
+n <- 1e4
+df <- data.frame(x = rnorm(n)) 
+
+ggplot(df, aes(x = x)) +
+  geom_histogram(aes(x, ..ncount..), alpha = 0.6, color = "grey55") +
+  stat_ecdf(color = "darkred") +
+  geom_hline(yintercept = 0.1, linetype = 3, color = "blue") +
+  geom_hline(yintercept = 0.5, linetype = 3, color = "blue") +
+  geom_hline(yintercept = 0.9, linetype = 3, color = "blue") +
+  geom_vline(aes(xintercept = mean(x)), linetype = 2, color = "darkgreen") +
+  theme_bw()
+```
+
+In a single and compact plot are summarized most of the properties of the distributions: the histogram basically is a discrete probability density function, in this case the y axis is normalized to [0, 1] using `..ncount..` so that is possible to plot also the Cumulative Density Function (PDF) in dark red. With the PDF is much easier to evaluate what are the quantile of a given percentile. I usually work with p10 and p90 percentiles, which are highlighted by the horizontal blue lines: the quantile is where the horizontal line crosses the PDF curve. 
+Finally, the mean of the distribution is plotted as a vertical green line.
+
+Note that in this case, as the normal distribution is symmetric, the mean approaches the 50th percentile, but that is not normally the case for different distribution shapes.
+
+Because of course there are more than just normal or uniform distributions: lognormal, beta, triangular, etc etc
+
+&nbsp;
+
+##### Truncated Distributions
+
+Some of the distributions have the properties of being limited to a specific range, as it is the case for uniform, triangular and beta distributions. This property is important when we want the distribution to represent some value with a physical meaning that cannot take values outside a specific range.
+In reality, all distribution can be constrained, that is by truncation. truncation of course is not just dropping the values outside the given range, but it is a redistribution of the samples.
+
+This can be done with the package `truncdist`
+
+```{r, warning = FALSE, message = FALSE}
+df <- mutate(df, xtrunc = truncdist::rtrunc(spec = "norm", n, a = -2, b = 1.5, mean = 0, sd = 1)) 
+
+ggplot(df, aes(x = xtrunc)) +
+  geom_histogram(aes(xtrunc, ..ncount..), alpha = 0.6, color = "grey55") +
+  stat_ecdf(color = "darkred") +
+  geom_hline(yintercept = 0.1, linetype = 3, color = "blue") +
+  geom_hline(yintercept = 0.5, linetype = 3, color = "blue") +
+  geom_hline(yintercept = 0.9, linetype = 3, color = "blue") +
+  geom_vline(aes(xintercept = mean(xtrunc)), linetype = 2, color = "darkgreen") +
+  theme_bw()
+```
+
+##### Fitting
+
+
+&nbsp;
+
+### Sampling 
+
+##### Random
+
+##### Latin Hypercube
+
+the randomness of association between variable make LH to be the same
+
+##### Correlation
+
+
+&nbsp;
+
+### Simulation
+
+##### Vectorized operations
+
+##### Convergence
+
+##### Parallel Computation
+
+&nbsp;
+
+### Results
+
+##### Derived Distributions
+
+##### Correlation Matrix
+
+##### Back Calculation
+
+&nbsp;
+
+### Examples
+
+##### Time Series
+
+##### Probability Maps
+
+
+
+
