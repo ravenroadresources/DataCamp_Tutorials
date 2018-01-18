@@ -97,7 +97,45 @@ ggplot(df, aes(x = xtrunc)) +
 
 ##### Fitting
 
+In some applciation, you may already have a dataset representing one or more input variables to your system and you may want to fit a distribution to those data.
+This can be achieved by providing a series of quantile to be matched to the function `rriskDistributions::get.___.par `, where the `.___.` can be changed to represent differnt distributions families.
 
+say we have a dataset of 50 samples that approximate anormal distribution:
+
+```{r, warning = FALSE, message = FALSE}
+sample_df <- data.frame(sampledata = rnorm(50)) 
+
+p_3 = c(0.1, 0.5, 0.9)
+q_3 = quantile(sample_df$sampledata, probs = p_3)
+fit_par_3 <- rriskDistributions::get.norm.par(p = p_3, q = q_3, show.output = TRUE, plot = TRUE, tol = 0.001, fit.weights = rep(1, length(p_3)), scaleX = c(0.1, 0.9))
+
+fit_par_3
+```
+
+How many quantiles should be used to achieve a good match? There isn't a correct answer, generally it depends on the distribution shape.
+The safest approach is to try with different quantiles size till achieaving a reasonably good match.
+
+```{r, warning = FALSE, message = FALSE}
+p_9 = c(1:9)/10
+q_9 = quantile(sample_df$sampledata, probs = p_9)
+fit_par_9 <- rriskDistributions::get.norm.par(p = p_9, q = q_9, show.output = FALSE, plot = FALSE)
+
+fitted_df <- data.frame(fitted_3 = rnorm(1e4, fit_par_3[1], fit_par_3[2]),
+                        fitted_9 = rnorm(1e4, fit_par_9[1], fit_par_9[2]))
+
+ggplot(sample_df) +
+  stat_ecdf(aes(x = sampledata)) +
+  stat_ecdf(data = fitted_df, aes(x = fitted_3), color = "red") +
+  stat_ecdf(data = fitted_df, aes(x = fitted_9), color = "blue") 
+
+```
+
+In many cases, the difficult part is to choose which distribution family to use. Une approach is to use the Cullen and Frey graph to have an hint to which distributions may aproximate the data.
+
+```{r, warning = FALSE, message = FALSE}
+library(fitdistrplus)
+descdist(sample_df$sampledata)
+```
 &nbsp;
 
 ### Sampling 
@@ -121,6 +159,10 @@ the randomness of association between variable make LH to be the same
 
 ##### Parallel Computation
 
+##### Repetitions
+
+##### Bootstraping
+
 &nbsp;
 
 ### Results
@@ -140,5 +182,8 @@ the randomness of association between variable make LH to be the same
 ##### Probability Maps
 
 
+&nbsp;
 
+### References
 
+https://www.r-bloggers.com/fitting-distributions-with-r/
