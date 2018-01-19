@@ -54,6 +54,8 @@ library(ggplot2)
 library(dplyr)
 
 n <- 1e4
+
+set.seed(1234)
 df <- data.frame(x = rnorm(n)) 
 
 ggplot(df, aes(x = x)) +
@@ -83,6 +85,7 @@ In reality, all distribution can be constrained, that is by truncation. truncati
 This can be done with the package `truncdist`
 
 ```{r, warning = FALSE, message = FALSE}
+set.seed(1234)
 df <- mutate(df, xtrunc = truncdist::rtrunc(spec = "norm", n, a = -2, b = 1.5, mean = 0, sd = 1)) 
 
 ggplot(df, aes(x = xtrunc)) +
@@ -98,11 +101,17 @@ ggplot(df, aes(x = xtrunc)) +
 ##### Fitting
 
 In some applciation, you may already have a dataset representing one or more input variables to your system and you may want to fit a distribution to those data.
+That I'm aware of, there are mainly 2 packages designed for fitting a distribution:
+
+1. `fitdistroplus`
+2. `rriskDistributions`
+
 This can be achieved by providing a series of quantile to be matched to the function `rriskDistributions::get.___.par `, where the `.___.` can be changed to represent differnt distributions families.
 
-say we have a dataset of 50 samples that approximate anormal distribution:
+Say we have a dataset of 50 samples that approximate anormal distribution:
 
 ```{r, warning = FALSE, message = FALSE}
+set.seed(1234)
 sample_df <- data.frame(sampledata = rnorm(50)) 
 
 p_3 = c(0.1, 0.5, 0.9)
@@ -130,24 +139,70 @@ ggplot(sample_df) +
 
 ```
 
+```{r, warning = FALSE, message = FALSE}
+library(fitdistrplus)
+
+fit_par_mle <- fitdist(sample_df$sampledata, "norm", method = "mle")
+fit_par_mme <- fitdist(sample_df$sampledata, "norm", method = "mme")
+fit_par_qme <- fitdist(sample_df$sampledata, "norm", method = "qme", probs = c(1/3, 2/3))
+fit_par_mge <- fitdist(sample_df$sampledata, "norm", method = "mge")
+
+fit_par_3
+fit_par_9
+fit_par_mle$estimate
+fit_par_mme$estimate
+fit_par_qme$estimate
+fit_par_mge$estimate
+
+plot(fit_par_mle)
+```
+
 In many cases, the difficult part is to choose which distribution family to use. Une approach is to use the Cullen and Frey graph to have an hint to which distributions may aproximate the data.
 
 ```{r, warning = FALSE, message = FALSE}
-library(fitdistrplus)
-descdist(sample_df$sampledata)
+
+fitdistrplus::descdist(sample_df$sampledata)
 ```
 &nbsp;
 
 ### Sampling 
 
+Once the inputa variables are defined, the nexts step is to sample from each variable distribution `n` values.
+The value of `n` is the number of times the simulation  will be repeated, and as so, it will have a great impact on the performance of the simulation.
+
 ##### Random
+
+The basic method for sampling is random sampling.
+Base R fucntions such as `rnorm() rlnorm() runif() rbeta()` and so on will perform a random sampling from the select distribution shape.
+
+```{r, warning = FALSE, message = FALSE}
+n <- 1e3
+
+set.seed(1234)
+df <- data.frame(l = rnorm(n),
+                 w = rnorm(n),
+                 h = runif(n))
+
+GGally::ggpairs(df)
+
+```
 
 ##### Latin Hypercube
 
 the randomness of association between variable make LH to be the same
+```{r, warning = FALSE, message = FALSE}
+
+
+```
+
 
 ##### Correlation
 
+
+```{r, warning = FALSE, message = FALSE}
+
+
+```
 
 &nbsp;
 
